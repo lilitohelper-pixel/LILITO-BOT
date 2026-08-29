@@ -14,11 +14,13 @@ async function createTaskPage(parsedTask, senderFirstName) {
   const databaseId = process.env.NOTION_DATABASE_ID;
   if (!databaseId) throw new Error("NOTION_DATABASE_ID is not set");
 
+  const personResponsible = parsedTask.person_responsible || senderFirstName || "";
+
   return getClient().pages.create({
     parent: { database_id: databaseId },
     properties: {
       Task: { title: [{ text: { content: parsedTask.task } }] },
-      Project: { rich_text: [{ text: { content: parsedTask.project || "" } }] },
+      "Person Responsible": { rich_text: [{ text: { content: personResponsible } }] },
       "Due date": parsedTask.due_date
         ? { date: { start: parsedTask.due_date } }
         : { date: null },

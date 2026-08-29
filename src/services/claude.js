@@ -4,7 +4,7 @@ const CLAUDE_URL = "https://api.anthropic.com/v1/messages";
 const CLAUDE_MODEL = "claude-sonnet-5";
 
 const RESPONSE_FORMAT_INSTRUCTIONS =
-  'Return ONLY a raw JSON object with no markdown formatting, no code fences, no backticks, and no explanatory text before or after — just the JSON object itself starting with { and ending with }. Fields: task (string), priority (High/Medium/Low), due_date (YYYY-MM-DD or null), project (string or null).';
+  'Return ONLY a raw JSON object with no markdown formatting, no code fences, no backticks, and no explanatory text before or after — just the JSON object itself starting with { and ending with }. Fields: task (string), priority (High/Medium/Low), due_date (YYYY-MM-DD or null), person_responsible (string or null — the name of the person who should do this task, only if a specific person other than the sender is mentioned in the message, e.g. "tell John to..." or "ask Sara to..."; otherwise null).';
 
 function todayContext() {
   const now = new Date();
