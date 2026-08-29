@@ -6,6 +6,17 @@ const notion = require("../services/notion");
 
 const router = express.Router();
 
+const ALLOWED_USER_IDS = (process.env.ALLOWED_TELEGRAM_USER_IDS || "")
+  .split(",")
+  .map((id) => id.trim())
+  .filter(Boolean);
+
+function isAuthorized(userId) {
+  // No allowlist configured — allow everyone (backward compatible default).
+  if (ALLOWED_USER_IDS.length === 0) return true;
+  return ALLOWED_USER_IDS.includes(String(userId));
+}
+
 router.post("/webhook/telegram", (req, res) => {
   // Ack immediately so Telegram doesn't retry; do the real work after responding.
   res.sendStatus(200);
@@ -19,6 +30,16 @@ async function handleUpdate(body) {
   if (!message) return;
 
   const chatId = message.chat && message.chat.id;
+  const senderId = message.from && message.from.id;
+
+  if (!isAuthorized(senderId)) {
+    if (chatId) {
+      await telegram
+        .sendMessage(chatId, "🚫 You're not authorized to use this bot.")
+        .catch((sendErr) => console.error("[telegram-webhook] failed to notify unauthorized user:", sendErr));
+    }
+    return;
+  }
 
   try {
     let parsedTask;
