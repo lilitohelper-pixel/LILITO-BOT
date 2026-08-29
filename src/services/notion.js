@@ -20,7 +20,7 @@ async function createTaskPage(parsedTask, senderFirstName) {
     parent: { database_id: databaseId },
     properties: {
       Task: { title: [{ text: { content: parsedTask.task } }] },
-      "Person Responsible": { rich_text: [{ text: { content: personResponsible } }] },
+      Responsible: { rich_text: [{ text: { content: personResponsible } }] },
       "Due date": parsedTask.due_date
         ? { date: { start: parsedTask.due_date } }
         : { date: null },
