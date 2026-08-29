@@ -23,7 +23,10 @@ async function handleUpdate(body) {
   try {
     let text;
 
-    if (message.text) {
+    if (message.text && message.text.startsWith("/")) {
+      // Slash command like /start — ignore for now.
+      return;
+    } else if (message.text) {
       text = message.text;
     } else if (message.voice) {
       text = await transcribeVoice(message.voice.file_id);
