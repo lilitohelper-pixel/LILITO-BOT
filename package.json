@@ -1,0 +1,21 @@
+{
+  "name": "telegram-task-bot",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Telegram -> AI -> Notion task bot",
+  "main": "src/index.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "setup-webhook": "node src/utils/setupWebhook.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.0",
+    "@notionhq/client": "^2.2.15",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0",
+    "form-data": "^4.0.0",
+    "node-fetch": "^2.7.0"
+  }
+}
