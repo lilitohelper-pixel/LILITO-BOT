@@ -21,24 +21,30 @@ async function handleUpdate(body) {
   const chatId = message.chat && message.chat.id;
 
   try {
-    let text;
+    let parsedTask;
 
     if (message.text && message.text.startsWith("/")) {
       // Slash command like /start — ignore for now.
       return;
     } else if (message.text) {
-      text = message.text;
+      parsedTask = await parseSafely(() => claude.parseTask(message.text), chatId);
     } else if (message.voice) {
-      text = await transcribeVoice(message.voice.file_id);
+      const text = await transcribeVoice(message.voice.file_id);
+      parsedTask = await parseSafely(() => claude.parseTask(text), chatId);
+    } else if (message.photo) {
+      const { base64, mediaType } = await downloadPhoto(message.photo);
+      parsedTask = await parseSafely(
+        () => claude.parseTaskFromImage(base64, mediaType, message.caption),
+        chatId
+      );
     } else {
-      // Photo, sticker, /start, etc. — ignore for now.
+      // Sticker, /start, etc. — ignore for now.
       return;
     }
 
-    const senderFirstName = message.from && message.from.first_name;
-    const parsedTask = await parseTaskSafely(text, chatId);
     if (!parsedTask) return;
 
+    const senderFirstName = message.from && message.from.first_name;
     await notion.createTaskPage(parsedTask, senderFirstName);
     await telegram.sendMessage(
       chatId,
@@ -60,10 +66,17 @@ async function transcribeVoice(fileId) {
   return whisper.transcribe(audioBuffer);
 }
 
-async function parseTaskSafely(text, chatId) {
-  let rawResult;
+async function downloadPhoto(photoSizes) {
+  // Telegram sends multiple resolutions; the last one is the largest.
+  const largest = photoSizes[photoSizes.length - 1];
+  const filePath = await telegram.getFile(largest.file_id);
+  const buffer = await telegram.downloadFile(filePath);
+  return { base64: buffer.toString("base64"), mediaType: "image/jpeg" };
+}
+
+async function parseSafely(taskFn, chatId) {
   try {
-    rawResult = await claude.parseTask(text);
+    return await taskFn();
   } catch (err) {
     console.error("[telegram-webhook] Claude parsing failed:", err);
     if (chatId) {
@@ -73,7 +86,6 @@ async function parseTaskSafely(text, chatId) {
     }
     return null;
   }
-  return rawResult;
 }
 
 module.exports = router;
